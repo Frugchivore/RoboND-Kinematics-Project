@@ -1,34 +1,15 @@
 from mpmath import *
 from sympy import *
-import numpy
-from . import utils
+import numpy as np
+from .utils import *
 
-
-## defines symbols
-q1, q2, q3, q4, q5, q6, q7 = symbols("q1:8")
-d1, d2, d3, d4, d5, d6, d7 = symbols("d1:8")
-a0, a1, a2, a3, a4, a5, a6 = symbols("a0:7")
-
-alpha0, alpha1, alpha2, alpha3, alpha4, alpha5,alpha6 = symbols("alpha0:7")
-
-### DH Table for KR210 ###
-DH_table = {
-    alpha0:     0, a0:      0, d1: 0.75,
-    alpha1: -pi/2, a1:   0.35, d2: 0, q2: q2 - pi/2,
-    alpha2:     0, a2:   1.25, d3: 0,
-    alpha3: -pi/2, a3: -0.054, d4: 1.50,
-    alpha4:  pi/2, a4:      0, d5: 0,
-    alpha5: -pi/2, a5:      0, d6: 0,
-    alpha6:     0, a6:      0, d7: 0.303, q7: 0
-}
-
-T_0_1 = utils.create_DH_transform(DH_table, alpha0, a0, d1, q1)
-T_1_2 = utils.create_DH_transform(DH_table, alpha1, a1, d2, q2)
-T_2_3 = utils.create_DH_transform(DH_table, alpha2, a2, d3, q3)
-T_3_4 = utils.create_DH_transform(DH_table, alpha3, a3, d4, q4)
-T_4_5 = utils.create_DH_transform(DH_table, alpha4, a4, d5, q5)
-T_5_6 = utils.create_DH_transform(DH_table, alpha5, a5, d6, q6)
-T_6_7 = utils.create_DH_transform(DH_table, alpha6, a6, d7, q7)
+T_0_1 = create_DH_transform(DH_table, alpha0, a0, d1, q1)
+T_1_2 = create_DH_transform(DH_table, alpha1, a1, d2, q2)
+T_2_3 = create_DH_transform(DH_table, alpha2, a2, d3, q3)
+T_3_4 = create_DH_transform(DH_table, alpha3, a3, d4, q4)
+T_4_5 = create_DH_transform(DH_table, alpha4, a4, d5, q5)
+T_5_6 = create_DH_transform(DH_table, alpha5, a5, d6, q6)
+T_6_7 = create_DH_transform(DH_table, alpha6, a6, d7, q7)
 
 # Correction to orientation of the end effector. (180 Z, -90 Y)
 R_z = Matrix([[cos(np.pi), -sin(np.pi), 0, 0],
@@ -75,20 +56,13 @@ def eval_forward_kinematic(tf_key, eval_dict):
     transform = kinematic_dict[tf_key]
     return transform.evalf(subs=eval_dict)
 
-eval_dict = {
-    q1: None,
-    q2: None,
-    q3: None,
-    q4: None,
-    q5: None,
-    q6: None
-}
 
-eval_dict = {
-    q1: -0.99,
-    q2: 0,
-    q3: 0,
-    q4: 0,
-    q5: 0,
-    q6: 0
-}
+def get_eval_dict(theta_1=None, theta_2=None, theta_3=None, theta_4=None, theta_5=None, theta_6=None):
+    return {
+        q1: theta_1,
+        q2: theta_2,
+        q3: theta_3,
+        q4: theta_4,
+        q5: theta_5,
+        q6: theta_6
+            }
