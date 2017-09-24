@@ -53,16 +53,23 @@ def get_eval_dict(theta_1=None, theta_2=None, theta_3=None, theta_4=None, theta_
         q6: theta_6
     }
 
+### Euler angles rotations ####
+x, y, z = symbols("x y z")
 
-# Correction to orientation of the end effector. (180 Z, -90 Y)
-R_z = Matrix([[cos(np.pi), -sin(np.pi), 0, 0],
-              [sin(np.pi), cos(np.pi), 0, 0],
+R_x = Matrix([[1, 0, 0, 0],
+              [0, cos(x), -sin(x), 0],
+              [0, sin(x), cos(x), 0],
+              [0, 0, 0, 1]])
+
+R_y = Matrix([[cos(y), 0, sin(y), 0],
+              [0, 1, 0, 0],
+              [-sin(y), 0, cos(y), 0],
+              [0, 0, 0, 1]])
+
+R_z = Matrix([[cos(z), -sin(z), 0, 0],
+              [sin(z), cos(z), 0, 0],
               [0, 0, 1, 0],
               [0, 0, 0, 1]])
 
-R_y = Matrix([[cos(-np.pi/2), 0, sin(-np.pi/2), 0],
-              [0, 1, 0, 0],
-              [-sin(-np.pi/2), 0, cos(-np.pi/2), 0],
-              [0, 0, 0, 1]])
-
-R_corr = simplify(R_z * R_y)
+# Correction to orientation of the end effector. (180 Z, -90 Y), z=pi, y=-np.pi/2
+R_corr = simplify(R_z.subs({z: np.pi}) * R_y.subs({y: -np.pi/2}))

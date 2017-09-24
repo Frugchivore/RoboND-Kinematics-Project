@@ -2,15 +2,18 @@ from mpmath import *
 from sympy import *
 import numpy as np
 from .utils import *
+import logging
+
+
 
 # Creating the class is very expensive. Store it here as a singleton.
 # Use
 _fk_instance = None
 
-
 class _ForwardKinematics:
     def __init__(self):
         # Joint to Joint transforms
+        logging.debug("Creating DH Transforms")
         T_0_1 = create_dh_transform(DH_table, alpha0, a0, d1, q1)
         T_1_2 = create_dh_transform(DH_table, alpha1, a1, d2, q2)
         T_2_3 = create_dh_transform(DH_table, alpha2, a2, d3, q3)
@@ -20,15 +23,18 @@ class _ForwardKinematics:
         T_6_7 = create_dh_transform(DH_table, alpha6, a6, d7, q7)
 
         # Base to Joint transforms
-        T_0_2 = simplify(T_0_1 * T_1_2)
-        T_0_3 = simplify(T_0_2 * T_2_3)
-        T_0_4 = simplify(T_0_3 * T_3_4)
-        T_0_5 = simplify(T_0_4 * T_4_5)
-        T_0_6 = simplify(T_0_5 * T_5_6)
-        T_0_7 = simplify(T_0_6 * T_6_7)
+        logging.debug("Creating Base to Joint Transforms")
+        T_0_2 = T_0_1 * T_1_2
+        T_0_3 = T_0_2 * T_2_3
+        T_0_4 = T_0_3 * T_3_4
+        T_0_5 = T_0_4 * T_4_5
+        T_0_6 = T_0_5 * T_5_6
+        T_0_7 = T_0_6 * T_6_7
 
         # Final full transform
-        T_0_EE = simplify(T_0_7 * R_corr)
+        logging.debug("Creating end effector Transform")
+        T_0_EE = T_0_7 * R_corr
+
 
         self.kinematic_dict = {
             "T_0_1": T_0_1,
@@ -46,10 +52,14 @@ class _ForwardKinematics:
             "T_5_6": T_5_6,
             "T_6_7": T_6_7,
         }
+        logging.debug("All Transforms done.")
 
-    def evaluate_transform(self, tf_key, joints_dict):
+    def evaluate_transform(self, tf_key, joints_dict, as_array=True):
         transform = self.kinematic_dict[tf_key]
-        return matrix2numpy(transform.evalf(subs=joints_dict), dtype=np.float64)
+        T = transform.evalf(subs=joints_dict)
+        if as_array:
+            T = matrix2numpy(T, dtype=np.float64)
+        return T
 
 
 def get_forward_kinematics():

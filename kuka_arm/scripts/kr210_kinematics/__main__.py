@@ -3,7 +3,13 @@ from time import time
 from mpmath import radians
 import tf
 from . import inverse_kinematics as ik
+from . import forward_kinematics as fk
+from . import utils
+import logging
+import sys
 
+base_logger = logging.getLogger()
+base_logger.setLevel(logging.DEBUG)
 '''
 Format of test case is [ [[EE position],[EE orientation as quaternions]],[WC location],[joint angles]]
 You can generate additional test cases by setting up your kuka project and running `$    roslaunch kuka_arm forward_kinematics.launch`
@@ -25,6 +31,7 @@ test_cases = {1:[[[2.16135,-1.42635,1.55109],
                   [-2.99,-0.12,0.94,4.06,1.29,-4.12]],
               4:[],
               5:[]}
+
 
 
 def test_code(test_case):
@@ -56,23 +63,40 @@ def test_code(test_case):
     class Pose:
         def __init__(self,comb):
             self.poses = [comb]
-
+    # pdb.set_trace()
     req = Pose(comb)
     start_time = time()
     
     ########################################################################################
-    ## 
+    ##
+    # our code needs those unpacked to work.
+    pos = [0, 0, 0]
+    pos[0] = req.poses[0].position.x
+    pos[1] = req.poses[0].position.y
+    pos[2] = req.poses[0].position.z
 
+    orient = [0, 0, 0, 0]
+    orient[0] = req.poses[0].orientation.x
+    orient[1] = req.poses[0].orientation.y
+    orient[2] = req.poses[0].orientation.z
+    orient[3] = req.poses[0].orientation.w
     ## Insert IK code here!
-    # pos_vector = req.
-    # ik_provider = ik.InverseKinematics()
-    # joint_values = ik_provider.
-    theta1 = 0
-    theta2 = 0
-    theta3 = 0
-    theta4 = 0
-    theta5 = 0
-    theta6 = 0
+    print("Building Kinematic Providers.")
+    start_time_build_ik = time()
+    ik_provider = ik.get_inverse_kinematics()
+    end_time_build_ik = time()
+    print("Building IK class took: {}".format(end_time_build_ik - start_time_build_ik))
+    start_time_evaluate_ik = time()
+    joint_values = ik_provider.evaluate_pose(pos, orient)
+    end_time_evaluate_ik = time()
+    print("Evaluating IK took: {}".format(end_time_evaluate_ik - start_time_evaluate_ik))
+
+    theta1 = joint_values[0]
+    theta2 = joint_values[1]
+    theta3 = joint_values[2]
+    theta4 = joint_values[3]
+    theta5 = joint_values[4]
+    theta6 = joint_values[5]
 
     ## 
     ########################################################################################
@@ -82,13 +106,21 @@ def test_code(test_case):
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
 
     ## (OPTIONAL) YOUR CODE HERE!
-
+    fk_provider = fk.get_forward_kinematics()
+    joints_dict = utils.get_eval_dict(theta_1=theta1,
+                                      theta_2=theta2,
+                                      theta_3=theta3,
+                                      theta_4=theta4,
+                                      theta_5=theta5,
+                                      theta_6=theta6)
+    T_EE = fk_provider.evaluate_transform("T_0_EE", joints_dict)
+    T_WC = fk_provider.evaluate_transform("T_0_5", joints_dict)
     ## End your code input for forward kr210_kinematics here!
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
-    your_wc = [1,1,1] # <--- Load your calculated WC values in this array
-    your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kr210_kinematics
+    your_wc = [T_WC[0, 3], T_WC[1, 3], T_WC[2, 3]] # <--- Load your calculated WC values in this array
+    your_ee = [T_EE[0, 3], T_EE[1, 3], T_EE[2, 3]] # <--- Load your calculated end effector value from your forward kr210_kinematics
     ########################################################################################
 
     ## Error analysis
@@ -100,7 +132,8 @@ def test_code(test_case):
         wc_y_e = abs(your_wc[1]-test_case[1][1])
         wc_z_e = abs(your_wc[2]-test_case[1][2])
         wc_offset = sqrt(wc_x_e**2 + wc_y_e**2 + wc_z_e**2)
-        print ("\nWrist error for x position is: %04.8f" % wc_x_e)
+        print ("\n Wrist position: {}".format(your_wc))
+        print ("Wrist error for x position is: %04.8f" % wc_x_e)
         print ("Wrist error for y position is: %04.8f" % wc_y_e)
         print ("Wrist error for z position is: %04.8f" % wc_z_e)
         print ("Overall wrist offset is: %04.8f units" % wc_offset)
@@ -112,7 +145,8 @@ def test_code(test_case):
     t_4_e = abs(theta4-test_case[2][3])
     t_5_e = abs(theta5-test_case[2][4])
     t_6_e = abs(theta6-test_case[2][5])
-    print ("\nTheta 1 error is: %04.8f" % t_1_e)
+    print ("\nJoint values: {}".format(joints_dict))
+    print ("Theta 1 error is: %04.8f" % t_1_e)
     print ("Theta 2 error is: %04.8f" % t_2_e)
     print ("Theta 3 error is: %04.8f" % t_3_e)
     print ("Theta 4 error is: %04.8f" % t_4_e)
@@ -129,16 +163,19 @@ def test_code(test_case):
         ee_y_e = abs(your_ee[1]-test_case[0][0][1])
         ee_z_e = abs(your_ee[2]-test_case[0][0][2])
         ee_offset = sqrt(ee_x_e**2 + ee_y_e**2 + ee_z_e**2)
-        print ("\nEnd effector error for x position is: %04.8f" % ee_x_e)
+        print ("\nEnd effector position: {}".format(your_ee))
+        print ("End effector error for x position is: %04.8f" % ee_x_e)
         print ("End effector error for y position is: %04.8f" % ee_y_e)
         print ("End effector error for z position is: %04.8f" % ee_z_e)
         print ("Overall end effector offset is: %04.8f units \n" % ee_offset)
 
 
-
-
 if __name__ == "__main__":
     # Change test case number for different scenarios
-    test_case_number = 1
-
+    argv = sys.argv
+    if len(argv) > 1:
+        test_case_number = int(argv[1])
+    else:
+        test_case_number = 1
+    print "test case nb: {}".format(test_case_number)
     test_code(test_cases[test_case_number])
