@@ -17,74 +17,103 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from geometry_msgs.msg import Pose
 from mpmath import *
 from sympy import *
+from kr210_kinematics.inverse_kinematics import get_inverse_kinematics
+from kr210_kinematics.utils import get_eval_dict
 
+DEBUG = False
 
-def handle_calculate_IK(req):
-    rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
-    if len(req.poses) < 1:
-        print "No valid poses received"
-        return -1
-    else:
-		
-        ### Your FK code here
-        # Create symbols
-	#
-	#   
-	# Create Modified DH parameters
-	#
-	#            
-	# Define Modified DH Transformation matrix
-	#
-	#
-	# Create individual transformation matrices
-	#
-	#
-	# Extract rotation matrices from the transformation matrices
-	#
-	#
-        ###
+class IK_server:
+    def __init__(self):
+        # Costly operation.
+        self.ik_provider = get_inverse_kinematics()
 
-        # Initialize service response
-        joint_trajectory_list = []
-        for x in xrange(0, len(req.poses)):
-            # IK code starts here
-            joint_trajectory_point = JointTrajectoryPoint()
+    def handle_calculate_IK(self, req):
+        rospy.loginfo("Received %s eef-poses from the plan" % len(req.poses))
+        if len(req.poses) < 1:
+            print "No valid poses received"
+            return -1
+        else:
 
-	    # Extract end-effector position and orientation from request
-	    # px,py,pz = end-effector position
-	    # roll, pitch, yaw = end-effector orientation
-            px = req.poses[x].position.x
-            py = req.poses[x].position.y
-            pz = req.poses[x].position.z
-
-            (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
-                [req.poses[x].orientation.x, req.poses[x].orientation.y,
-                    req.poses[x].orientation.z, req.poses[x].orientation.w])
-     
-            ### Your IK code here 
-	    # Compensate for rotation discrepancy between DH parameters and Gazebo
-	    #
-	    #
-	    # Calculate joint angles using Geometric IK method
-	    #
-	    #
+            ### Your FK code here
+            # Create symbols
+        #
+        #
+        # Create Modified DH parameters
+        #
+        #
+        # Define Modified DH Transformation matrix
+        #
+        #
+        # Create individual transformation matrices
+        #
+        #
+        # Extract rotation matrices from the transformation matrices
+        #
+        #
             ###
-		
-            # Populate response for the IK request
-            # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-	    joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
-	    joint_trajectory_list.append(joint_trajectory_point)
 
-        rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
-        return CalculateIKResponse(joint_trajectory_list)
+            # Initialize service response
+            joint_trajectory_list = []
+            for x in xrange(0, len(req.poses)):
+                # IK code starts here
+                joint_trajectory_point = JointTrajectoryPoint()
 
+            # Extract end-effector position and orientation from request
+            # px,py,pz = end-effector position
+            # roll, pitch, yaw = end-effector orientation
+            #     px = req.poses[x].position.x
+            #     py = req.poses[x].position.y
+            #     pz = req.poses[x].position.z
+            #
+            #     (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
+            #         [req.poses[x].orientation.x, req.poses[x].orientation.y,
+            #             req.poses[x].orientation.z, req.poses[x].orientation.w])
 
-def IK_server():
-    # initialize node and declare calculate_ik service
-    rospy.init_node('IK_server')
-    s = rospy.Service('calculate_ik', CalculateIK, handle_calculate_IK)
-    print "Ready to receive an IK request"
-    rospy.spin()
+                position = [0, 0, 0]
+                position[0] = req.poses[x].position.x
+                position[1] = req.poses[x].position.y
+                position[2] = req.poses[x].position.z
+
+                orientation = [0, 0, 0, 0]
+                orientation[0] = req.poses[x].orientation.x
+                orientation[1] = req.poses[x].orientation.y
+                orientation[2] = req.poses[x].orientation.z
+                orientation[3] = req.poses[x].orientation.w
+                ### Your IK code here
+            # Compensate for rotation discrepancy between DH parameters and Gazebo
+            #
+            #
+            # Calculate joint angles using Geometric IK method
+            #
+            #
+                ###
+
+                # Populate response for the IK request
+                # In the next line replace theta1,theta2...,theta6 by your joint angle variables
+                # joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+                thetas = self.ik_provider.evaluate_pose(position, orientation)
+                joint_trajectory_point.positions = thetas
+                if DEBUG and x % 5 == 0:
+                    rospy.logdebug("DIAGNOSTIC at step {}".format(x))
+                    joints_values = get_eval_dict(theta_1=thetas[0], theta_2=thetas[1], theta_3=thetas[2], theta_4=thetas[3], theta_5=thetas[4], theta_6=thetas[5])
+                    EE = self.ik_provider.forward_kinematics.evaluate_transform("T_0_EE", joints_values, True)
+                    rospy.logdebug("pos in: {}".format(req.poses[x].position))
+                    rospy.logdebug("pos out: x: {}, y: {}, z: {}".format(EE[0,3], EE[1,3], EE[2,3]))
+                    rospy.logdebug("orient in: {}".format(req.poses[x].orientation))
+                    q = tf.transformations.quaternion_from_matrix(EE)
+                    rospy.logdebug("orient out: x {}, y: {}, z: {}, w: {}".format(*q))
+
+                joint_trajectory_list.append(joint_trajectory_point)
+
+            rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
+            return CalculateIKResponse(joint_trajectory_list)
+
+    def run(self):
+        # initialize node and declare calculate_ik service
+        rospy.init_node('IK_server')
+        s = rospy.Service('calculate_ik', CalculateIK, self.handle_calculate_IK)
+        print "Ready to receive an IK request"
+        rospy.spin()
 
 if __name__ == "__main__":
-    IK_server()
+    IK_server().run()

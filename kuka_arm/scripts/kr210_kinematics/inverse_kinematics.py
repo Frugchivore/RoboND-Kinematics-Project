@@ -2,7 +2,7 @@ from mpmath import *
 from sympy import *
 import numpy as np
 from .utils import *
-from .forward_kinematics import  get_forward_kinematics
+from .forward_kinematics import get_forward_kinematics
 import tf
 import pdb
 
@@ -68,7 +68,7 @@ class _InverseKinematics:
         ### Inverse orientation
         joints_values = get_eval_dict(theta_1=theta_1, theta_2=theta_2, theta_3=theta_3)
         R_0_3 = self.forward_kinematics.evaluate_transform("T_0_3", joints_values, False)
-        R_3_6 = R_0_3.inv("LU") * Rrpy
+        R_3_6 = R_0_3.inv() * Rrpy
 
         r12 = R_3_6[1, 2]
         cq5 = r12
@@ -84,9 +84,9 @@ class _InverseKinematics:
         theta_6 = atan2(-r11, r10)
 
         # return everything evaluated.
-        return theta_1, theta_2, theta_3, theta_4, theta_5, theta_6
+        #return theta_1, theta_2, theta_3, theta_4, theta_5, theta_6
 
-        # return theta_1.evalf(), theta_2.evalf(), theta_3.evalf(), theta_4.evalf(), theta_5.evalf(), theta_6.evalf()
+        return theta_1.evalf(), theta_2.evalf(), theta_3.evalf(), theta_4.evalf(), theta_5.evalf(), theta_6.evalf()
 
 def get_inverse_kinematics():
     global _ik_instance

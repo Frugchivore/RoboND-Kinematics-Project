@@ -3,6 +3,7 @@ from time import time
 from mpmath import radians
 import tf
 
+
 '''
 Format of test case is [ [[EE position],[EE orientation as quaternions]],[WC location],[joint angles]]
 You can generate additional test cases by setting up your kuka project and running `$ roslaunch kuka_arm forward_kinematics.launch`
@@ -75,17 +76,17 @@ def test_code(test_case):
     ########################################################################################
     
     ########################################################################################
-    ## For additional debugging add your forward kinematics here. Use your previously calculated thetas
+    ## For additional debugging add your forward kr210_kinematics here. Use your previously calculated thetas
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
 
     ## (OPTIONAL) YOUR CODE HERE!
 
-    ## End your code input for forward kinematics here!
+    ## End your code input for forward kr210_kinematics here!
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
     your_wc = [1,1,1] # <--- Load your calculated WC values in this array
-    your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
+    your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kr210_kinematics
     ########################################################################################
 
     ## Error analysis
