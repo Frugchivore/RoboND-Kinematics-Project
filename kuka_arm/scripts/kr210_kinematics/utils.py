@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+"""
+Set of objects and method used to support the forward and inverse kinematics functionality.
+- Denavit Hartenberg table for KR210.
+- generic euler angle rotation matrices.
+- Method to obtain the joints values dictionary for FK and IK requests.
+- All relevant Sympy symbols
+"""
+
+
 from __future__ import division
 from mpmath import *
 from sympy import *

@@ -17,14 +17,22 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from geometry_msgs.msg import Pose
 from mpmath import *
 from sympy import *
+
+# Inverse and forward kinematics logic is stored in this package.
 from kr210_kinematics.inverse_kinematics import get_inverse_kinematics
 from kr210_kinematics.utils import get_eval_dict
 
+# Flag to allow for diagnostic output.
 DEBUG = False
+DEBUG_FREQ = 5
+
 
 class IK_server:
+    """
+    Server acting as bridge between the IK provider and the rest of the system.
+    """
     def __init__(self):
-        # Costly operation.
+        # Building the provider is a costly operation, save the cost by building it before any request is served.
         self.ik_provider = get_inverse_kinematics()
 
     def handle_calculate_IK(self, req):
@@ -89,11 +97,10 @@ class IK_server:
                 ###
 
                 # Populate response for the IK request
-                # In the next line replace theta1,theta2...,theta6 by your joint angle variables
-                # joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
                 thetas = self.ik_provider.evaluate_pose(position, orientation)
                 joint_trajectory_point.positions = thetas
-                if DEBUG and x % 5 == 0:
+
+                if DEBUG and x % DEBUG_FREQ == 0:
                     rospy.logdebug("DIAGNOSTIC at step {}".format(x))
                     joints_values = get_eval_dict(theta_1=thetas[0], theta_2=thetas[1], theta_3=thetas[2], theta_4=thetas[3], theta_5=thetas[4], theta_6=thetas[5])
                     EE = self.ik_provider.forward_kinematics.evaluate_transform("T_0_EE", joints_values, True)

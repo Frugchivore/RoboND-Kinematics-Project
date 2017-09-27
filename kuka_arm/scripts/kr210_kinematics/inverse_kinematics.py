@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+"""
+Module for the Inverse Kinematics Provider.
+To improve on performance it is recommended to get the IK via the static factory
+get_inverse_kinematics()
+This will insure that Inverse Kinematics is kept as a singleton.
+"""
+
+
 from mpmath import *
 from sympy import *
 import numpy as np
@@ -32,6 +41,12 @@ class _InverseKinematics:
         self.forward_kinematics = get_forward_kinematics()
 
     def evaluate_pose(self, position, orientation):
+        """
+        Evaluate position and orientation and returns the joint angles solving for those.
+        :param position: list of size 3, contains the x,y,z position of the end effector.
+        :param orientation: list of size 4, contains the x,y,z,w quaternion of the end effector.
+        :return: list of size 6 of the joints values.
+        """
         position = Matrix(position)
         RRR = tf.transformations.quaternion_matrix(orientation)
         Rrpy = RRR * R_corr
@@ -93,18 +108,3 @@ def get_inverse_kinematics():
     if _ik_instance is None:
         _ik_instance = _InverseKinematics()
     return _ik_instance
-
-test_cases = {1:[[[2.16135,-1.42635,1.55109],
-                  [0.708611,0.186356,-0.157931,0.661967]],
-                  [1.89451,-1.44302,1.69366],
-                  [-0.65,0.45,-0.36,0.95,0.79,0.49]],
-              2:[[[-0.56754,0.93663,3.0038],
-                  [0.62073, 0.48318,0.38759,0.480629]],
-                  [-0.638,0.64198,2.9988],
-                  [-0.79,-0.11,-2.33,1.94,1.14,-3.68]],
-              3:[[[-1.3863,0.02074,0.90986],
-                  [0.01735,-0.2179,0.9025,0.371016]],
-                  [-1.1669,-0.17989,0.85137],
-                  [-2.99,-0.12,0.94,4.06,1.29,-4.12]],
-              4:[],
-              5:[]}

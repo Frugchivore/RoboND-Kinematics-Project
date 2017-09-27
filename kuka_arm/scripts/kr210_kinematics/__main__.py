@@ -11,6 +11,12 @@ import sys
 base_logger = logging.getLogger()
 base_logger.setLevel(logging.DEBUG)
 '''
+IK_debug as been moved to this file.
+usage is:
+    python -m kr210_kinematics <test_id>
+
+with test_id the integer key of the test you want to run.
+
 Format of test case is [ [[EE position],[EE orientation as quaternions]],[WC location],[joint angles]]
 You can generate additional test cases by setting up your kuka project and running `$    roslaunch kuka_arm forward_kinematics.launch`
 From here you can adjust the joint angles to find thetas, use the gripper to extract positions and orientation (in quaternion xyzw) and lastly use link 5
