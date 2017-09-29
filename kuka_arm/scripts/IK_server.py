@@ -17,6 +17,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from geometry_msgs.msg import Pose
 from mpmath import *
 from sympy import *
+import time
 
 # Inverse and forward kinematics logic is stored in this package.
 from kr210_kinematics.inverse_kinematics import get_inverse_kinematics
@@ -42,40 +43,15 @@ class IK_server:
             return -1
         else:
 
-            ### Your FK code here
-            # Create symbols
-        #
-        #
-        # Create Modified DH parameters
-        #
-        #
-        # Define Modified DH Transformation matrix
-        #
-        #
-        # Create individual transformation matrices
-        #
-        #
-        # Extract rotation matrices from the transformation matrices
-        #
-        #
-            ###
-
+            do_debug = rospy.get_param("/trajectory_sampler/debug")
+            if do_debug:
+                debug_freq = rospy.get_param("/trajectory_sampler/debug_freq")
             # Initialize service response
+            start_time = time.time()
             joint_trajectory_list = []
             for x in xrange(0, len(req.poses)):
                 # IK code starts here
                 joint_trajectory_point = JointTrajectoryPoint()
-
-            # Extract end-effector position and orientation from request
-            # px,py,pz = end-effector position
-            # roll, pitch, yaw = end-effector orientation
-            #     px = req.poses[x].position.x
-            #     py = req.poses[x].position.y
-            #     pz = req.poses[x].position.z
-            #
-            #     (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
-            #         [req.poses[x].orientation.x, req.poses[x].orientation.y,
-            #             req.poses[x].orientation.z, req.poses[x].orientation.w])
 
                 position = [0, 0, 0]
                 position[0] = req.poses[x].position.x
@@ -100,7 +76,7 @@ class IK_server:
                 thetas = self.ik_provider.evaluate_pose(position, orientation)
                 joint_trajectory_point.positions = thetas
 
-                if DEBUG and x % DEBUG_FREQ == 0:
+                if do_debug and x % debug_freq == 0:
                     rospy.logdebug("DIAGNOSTIC at step {}".format(x))
                     joints_values = get_eval_dict(theta_1=thetas[0], theta_2=thetas[1], theta_3=thetas[2], theta_4=thetas[3], theta_5=thetas[4], theta_6=thetas[5])
                     EE = self.ik_provider.forward_kinematics.evaluate_transform("T_0_EE", joints_values, True)

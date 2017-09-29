@@ -171,8 +171,8 @@ TrajectorySampler::TrajectorySampler(ros::NodeHandle nh)
     move_group.setPoseTarget(target_pose);
 
     // slow down movement of the robot
-    move_group.setMaxVelocityScalingFactor(0.2);
-    eef_group.setMaxVelocityScalingFactor(1.0);
+    move_group.setMaxVelocityScalingFactor(0.8);
+    eef_group.setMaxVelocityScalingFactor(1.25);
 
     // define plan object which will hold the planned trajectory
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -324,6 +324,7 @@ TrajectorySampler::TrajectorySampler(ros::NodeHandle nh)
                              rviz_visual_tools::WHITE, rviz_visual_tools::XXXXLARGE);
     visual_tools.trigger();
     CloseGripper();
+    ros::Duration(6.0).sleep();
     visual_tools.prompt("next step");
 
     /*

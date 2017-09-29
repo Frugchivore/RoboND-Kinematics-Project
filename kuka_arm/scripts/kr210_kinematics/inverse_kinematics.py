@@ -9,11 +9,9 @@ This will insure that Inverse Kinematics is kept as a singleton.
 
 from mpmath import *
 from sympy import *
-import numpy as np
 from .utils import *
 from .forward_kinematics import get_forward_kinematics
 import tf
-import pdb
 
 _ik_instance = None
 
@@ -97,9 +95,6 @@ class _InverseKinematics:
         r10 = R_3_6[1, 0]
         r11 = R_3_6[1, 1]
         theta_6 = atan2(-r11, r10)
-
-        # return everything evaluated.
-        #return theta_1, theta_2, theta_3, theta_4, theta_5, theta_6
 
         return theta_1.evalf(), theta_2.evalf(), theta_3.evalf(), theta_4.evalf(), theta_5.evalf(), theta_6.evalf()
 

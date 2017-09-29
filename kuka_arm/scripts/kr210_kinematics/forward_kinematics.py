@@ -9,9 +9,7 @@ This will insure that Forward Kinematics is kept as a singleton.
 
 __author__ = "Ndil-Adjim Sou Ngadoy"
 
-from mpmath import *
-from sympy import *
-import numpy as np
+from sympy import matrix2numpy
 from .utils import *
 import logging
 
