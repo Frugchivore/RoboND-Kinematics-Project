@@ -46,6 +46,7 @@ class IK_server:
             do_debug = rospy.get_param("/trajectory_sampler/debug")
             if do_debug:
                 debug_freq = rospy.get_param("/trajectory_sampler/debug_freq")
+
             # Initialize service response
             start_time = time.time()
             joint_trajectory_list = []
@@ -77,14 +78,14 @@ class IK_server:
                 joint_trajectory_point.positions = thetas
 
                 if do_debug and x % debug_freq == 0:
-                    rospy.logdebug("DIAGNOSTIC at step {}".format(x))
+                    rospy.loginfo("DIAGNOSTIC at step {}".format(x))
                     joints_values = get_eval_dict(theta_1=thetas[0], theta_2=thetas[1], theta_3=thetas[2], theta_4=thetas[3], theta_5=thetas[4], theta_6=thetas[5])
                     EE = self.ik_provider.forward_kinematics.evaluate_transform("T_0_EE", joints_values, True)
-                    rospy.logdebug("pos in: {}".format(req.poses[x].position))
-                    rospy.logdebug("pos out: x: {}, y: {}, z: {}".format(EE[0,3], EE[1,3], EE[2,3]))
-                    rospy.logdebug("orient in: {}".format(req.poses[x].orientation))
+                    rospy.loginfo("pos in: {}".format(req.poses[x].position))
+                    rospy.loginfo("pos out: x: {}, y: {}, z: {}".format(EE[0,3], EE[1,3], EE[2,3]))
+                    rospy.loginfo("orient in: {}".format(req.poses[x].orientation))
                     q = tf.transformations.quaternion_from_matrix(EE)
-                    rospy.logdebug("orient out: x {}, y: {}, z: {}, w: {}".format(*q))
+                    rospy.loginfo("orient out: x {}, y: {}, z: {}, w: {}".format(*q))
 
                 joint_trajectory_list.append(joint_trajectory_point)
 
